@@ -1,4 +1,3 @@
-
 # Proyecto1-TallerDigital
 Proyecto 1: Whack-a-mole: juego híbrido FPGA / lógica discreta
 
@@ -61,18 +60,30 @@ Para el subsistema discreto:
 ### 3.4 Diagrama de cuarto nivel
 
 
-#### 3.4.1 Diseños de esquemático para el subsistema discreto LFSR
+#### 3.4.1 Diseños de esquemático para el subsistema discreto Control de Avance
 
-El generador de números pseudoaleatorios de 3 bits puede ser construido por un LFSR (Lineal function Shift Register) con una red de realimentación XOR. Un ejemplo elegido es el siguiente, la función lineal sería B XOR C.
+Este bloque recibe la señal de solicitud proveniente de la FPGA y genera una señal de habilitación para el avance del LFSR. La red RC junto con la lógica combinacional permite generar una transición controlada, reduciendo la posibilidad de múltiples avances no deseados ante una misma solicitud.
+
+Aunque la FPGA podría generar directamente un pulso de avance, este bloque añade una etapa de acondicionamiento de la señal y garantiza que el registro pseudoaleatorio avance una única vez por cada solicitud de nuevo topo.
+
+![Esquemático del LFSR propuesto](docs/diseño/Diagrama_Control_de_Avance.jpeg)
+
+#### 3.4.2 Diseños de esquemático para el subsistema discreto LFSR
+
+El generador de números pseudoaleatorios se implementa mediante un LFSR (Linear Feedback Shift Register) de 4 bits con una red de realimentación XOR. En el diseño propuesto, la función de realimentación utilizada corresponde a C XOR D, la cual genera el nuevo bit que será introducido en el registro durante cada avance.
 
 ![Esquemático del LFSR propuesto](docs/diseño/Diagrama_LFSR_tableta.jpeg)
 
 La implementación propuesta utiliza flip-flops tipo D de la familia 74LS74 y una compuerta XOR para generar la señal de realimentación del registro. Esta configuración fue seleccionada porque utiliza lógica discreta y permite generar secuencias pseudoaleatorias con una cantidad reducida de componentes.
 
-Las salidas Q0, Q1 y Q2 corresponden al valor generado por el LFSR y son utilizadas posteriormente por el decodificador 3 a 8 para determinar la posición activa del topo. El registro avanza únicamente cuando recibe una solicitud de nuevo topo desde la FPGA.
+Las salidas Q0, Q1, Q2 y Q3 corresponden al valor generado por el LFSR. Aunque el registro genera una secuencia de 4 bits, únicamente tres de sus salidas son utilizadas por el decodificador 74LS138, ya que éste requiere una entrada de 3 bits para seleccionar una de las ocho posiciones posibles del topo. El registro avanza únicamente cuando recibe una solicitud de nuevo topo desde la FPGA.
+
+La siguiente tabla muestra los posibles valores de la función de realimentación XOR utilizada por el LFSR para generar el siguiente estado del registro.
+
+![Esquemático del LFSR propuesto](docs/diseño/Diagrama_LFSR_Tabla.jpeg)
 
 
-#### 3.4.2 Diseños de esquemático para el subsistema discreto Decodificador 3 a 8
+#### 3.4.3 Diseños de esquemático para el subsistema discreto Decodificador 3 a 8
 
 
 ![Esquemático del Decodificador 3 a 8 propuesto](docs/diseño/Diagrama_Deco.jpeg)
@@ -83,7 +94,7 @@ El decodificador 74LS138 permite convertir los 3 bits generados por el LFSR en u
 
 
 
-#### 3.4.3 Diseños de esquemático para el subsistema discreto Oscilador de Baud Rate
+#### 3.4.4 Diseños de esquemático para el subsistema discreto Oscilador de Baud Rate
 
 
 ![Esquemático del Oscilador de Baud Rate propuesto](docs/diseño/Diagrama_Osilador.jpeg)
@@ -93,7 +104,7 @@ El bloque generador de baud rate se implementa mediante un temporizador NE555 en
 Las entradas de reinicio ($\text{R0}_1$ y $\text{R0}_2$) se conectan a tierra para garantizar el conteo continuo de 0 a 15. La salida obtenida en el pin 11 proporciona la frecuencia dividida entre 16, generando la señal CLK_BAUD, la cual se utiliza como reloj de desplazamiento para el registro paralelo-serie 74LS165 durante el proceso de transmisión de datos hacia la FPGA.
 
 
- #### 3.4.3 Diseños de esquemático para el subsistema discreto Registro Paralelo a Serie
+ #### 3.4.5 Diseños de esquemático para el subsistema discreto Registro Paralelo a Serie
 
 ![Esquemático del Registro Paralelo a Serie propuesto](docs/diseño/Diagrama_Reg_Paralelo_a_Serie.jpeg)
 
@@ -102,9 +113,9 @@ El 74LS165 se utiliza para convertir el dato paralelo de 8 bits proveniente del 
 
 
 
-#### 3.4.4 Diseños de módulos en la FPGA
+#### 3.4.6 Diseños de módulos en la FPGA
 
-La máquina de estado de moore propuesta:
+La máquina de estado de moore:
 
 ![FSM](docs/diseño/diagrama_fsm.jpeg)
 
